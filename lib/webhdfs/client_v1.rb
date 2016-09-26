@@ -26,7 +26,7 @@ module WebHDFS
     attr_accessor :ssl_cert
     attr_accessor :ssl_key
     attr_accessor :ssl_version
-    attr_accessor :kerberos, :kerberos_keytab
+    attr_accessor :kerberos, :kerberos_keytab, :kerberos_service_principal
     attr_accessor :http_headers
 
     SSL_VERIFY_MODES = [:none, :peer]
@@ -59,6 +59,8 @@ module WebHDFS
 
       @kerberos = false
       @kerberos_keytab = nil
+      @kerberos_service_principal = nil
+
       @http_headers = http_headers
     end
 
@@ -315,7 +317,10 @@ module WebHDFS
       if @kerberos
         require 'base64'
         require 'gssapi'
-        gsscli = GSSAPI::Simple.new(@host, 'HTTP', @kerberos_keytab)
+        require 'httpclient'
+
+        gsscli = GSSAPI::Simple.new(@host, @kerberos_service_principal, @kerberos_keytab)
+
         token = nil
         begin
           token = gsscli.init_context
